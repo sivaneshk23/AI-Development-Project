@@ -1,6 +1,2 @@
 python-dotenv
-requests
-openai
-google-generativeai
 ollama
-langchain
