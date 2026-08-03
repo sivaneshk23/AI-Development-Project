@@ -71,3 +71,94 @@ These tools will later be integrated into the Perceive-Plan-Act-Observe agent lo
 ### Next Development Milestone
 
 The next milestone is to begin implementing the agent loop and integrate an actual LLM for SQL generation and correction.
+
+## Development Progress - 03/08/2026
+
+### Perceive and Plan Pipeline
+
+Implemented the initial Perceive and Plan stages of the Self-Correcting SQL Agent.
+
+### Perceive Stage
+
+Created `agent/perceive.py`.
+
+The Perceive stage collects:
+
+- The user's natural-language database question
+- The actual database schema retrieved through the Schema Inspection Tool
+
+This ensures that the agent has access to the real database structure before planning an operation.
+
+### Plan Stage
+
+Created `agent/planner.py`.
+
+The current planner is a deterministic rule-based prototype that converts the perceived information into structured execution steps.
+
+The planner currently recognizes basic requests involving:
+
+- Employee records
+- Department filtering
+- Salary-related requests
+- Listing employee records
+
+### Testing
+
+The following questions were tested successfully:
+
+1. `Show all employees from the IT department.`
+2. `Show employee salary details.`
+3. `List all employees.`
+
+The Perceive stage correctly displayed the `employees` table containing:
+
+- id - INTEGER
+- name - TEXT
+- department - TEXT
+- salary - REAL
+
+### Rule-Based Planner Limitation
+
+The following natural-language question was also tested:
+
+`Who earns the highest amount?`
+
+The current planner could not infer that "highest amount" refers to the `salary` column.
+
+This is an expected limitation of the deterministic prototype and demonstrates the need for LLM-based natural-language reasoning.
+
+### Python Package Execution
+
+The agent modules are executed from the project root using:
+
+`py -m agent.perceive`
+
+and:
+
+`py -m agent.planner`
+
+This preserves the correct Python package import context.
+
+### Current Agent Pipeline
+
+User Question
+
+↓
+
+Perceive
+
+↓
+
+User Question + Database Schema
+
+↓
+
+Plan
+
+↓
+
+Structured Execution Plan
+
+### Next Development Milestone
+
+The next milestone is to continue the agent loop by connecting planning with executable actions and observation of tool results. LLM integration will later replace or enhance the deterministic planning logic for natural-language reasoning.
