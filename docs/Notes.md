@@ -162,3 +162,105 @@ Structured Execution Plan
 ### Next Development Milestone
 
 The next milestone is to continue the agent loop by connecting planning with executable actions and observation of tool results. LLM integration will later replace or enhance the deterministic planning logic for natural-language reasoning.
+
+## Development Progress - 04/08/2026
+
+### ACT Stage Implementation
+
+Implemented the ACT stage of the Self-Correcting SQL Agent.
+
+Created:
+
+`agent/act.py`
+
+The ACT stage receives a SQL query and invokes the existing SQL Execution Tool.
+
+The ACT stage is responsible for tool execution only. SQL generation will later be handled by the LLM-based reasoning/planning component.
+
+### Current Execution Flow
+
+User Question
+
+↓
+
+PERCEIVE
+
+↓
+
+PLAN
+
+↓
+
+ACT
+
+↓
+
+SQL Execution Tool
+
+↓
+
+SQLite Database
+
+### ACT Stage Responsibilities
+
+The ACT stage:
+
+- Receives a SQL query
+- Invokes the `execute_sql()` tool
+- Stores the executed SQL query
+- Stores the tool execution result
+- Preserves successful query results
+- Preserves SQL error information
+- Handles zero-row query results without crashing
+
+### Manual Testing
+
+The ACT stage was manually tested with:
+
+1. A valid department query
+2. A valid salary-ordering query
+3. An invalid table query
+4. A valid query returning zero rows
+
+The system correctly distinguished between:
+
+- Successful queries containing records
+- Successful queries returning zero records
+- Failed SQL queries
+
+### Automated Testing
+
+Created:
+
+`tests/test_act.py`
+
+Automated tests verified:
+
+- Successful SQL execution
+- Salary query execution
+- SQL tool failure handling
+- Zero-row result handling
+
+Final automated test result:
+
+**4/4 tests passed**
+
+### Current Limitation
+
+The current ACT stage does not generate SQL from natural-language questions.
+
+The existing PLAN stage is also still a deterministic prototype.
+
+A real LLM must later be integrated into the planning/reasoning stage to satisfy the Agent Loop assignment requirement.
+
+### Next Development Milestone
+
+The next stage is OBSERVE.
+
+OBSERVE will analyze the result returned by ACT and determine whether:
+
+- The query succeeded with useful records
+- The query returned zero rows
+- The SQL execution failed
+
+This observation will later support retry and self-correction behavior.
