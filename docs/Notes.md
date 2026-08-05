@@ -264,3 +264,90 @@ OBSERVE will analyze the result returned by ACT and determine whether:
 - The SQL execution failed
 
 This observation will later support retry and self-correction behavior.
+
+## Development Progress - 05/08/2026
+
+### OBSERVE Stage Implementation
+
+Implemented the OBSERVE stage of the Self-Correcting SQL Agent.
+
+Created:
+
+`agent/observe.py`
+
+The OBSERVE stage analyzes the output returned by the ACT stage and determines the execution outcome.
+
+### Observation Categories
+
+The system currently classifies execution into three categories:
+
+1. Success
+2. Zero-row result
+3. SQL execution error
+
+Each observation also determines whether the agent should retry the task.
+
+### Current Decision Logic
+
+Success
+
+- Query executed successfully
+- Records returned
+- Retry not required
+
+Zero-row Result
+
+- Query executed successfully
+- No records returned
+- Retry recommended
+
+SQL Error
+
+- SQL execution failed
+- Retry recommended
+
+### Automated Testing
+
+Created:
+
+`tests/test_observe.py`
+
+Verified:
+
+- Successful observation
+- SQL error observation
+- Zero-row observation
+
+Result:
+
+**3/3 tests passed**
+
+### Current Agent Loop
+
+User Question
+
+↓
+
+PERCEIVE
+
+↓
+
+PLAN
+
+↓
+
+ACT
+
+↓
+
+OBSERVE
+
+### Current Limitation
+
+The agent currently reports whether another attempt should be made.
+
+It does not yet automatically revise SQL queries or perform autonomous retries.
+
+### Next Milestone
+
+Implement self-correction and retry logic so the agent can automatically recover from SQL failures and zero-row results.
