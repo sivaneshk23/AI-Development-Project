@@ -351,3 +351,89 @@ It does not yet automatically revise SQL queries or perform autonomous retries.
 ### Next Milestone
 
 Implement self-correction and retry logic so the agent can automatically recover from SQL failures and zero-row results.
+
+## Development Progress - 07/08/2026
+
+### Self-Correction Stage
+
+Implemented the Self-Correction stage of the Agent Loop.
+
+Created:
+
+`agent/self_correct.py`
+
+The Self-Correction stage evaluates the output of the OBSERVE stage and determines whether another planning iteration should be attempted.
+
+### Current Decision Process
+
+The decision logic currently supports three outcomes:
+
+- Success
+- SQL Error
+- Zero-Row Result
+
+The stage determines whether another iteration should be attempted based on the observation.
+
+### Current Behaviour
+
+Success
+
+- Retry = False
+
+SQL Error
+
+- Retry = True
+
+Zero-Row Result
+
+- Retry = True
+
+### Automated Testing
+
+Created:
+
+`tests/test_self_correct.py`
+
+Verified:
+
+- Successful execution
+- SQL error handling
+- Zero-row handling
+
+Result:
+
+**3/3 tests passed**
+
+### Agent Loop Progress
+
+User Question
+
+↓
+
+PERCEIVE
+
+↓
+
+PLAN (Prototype)
+
+↓
+
+ACT
+
+↓
+
+OBSERVE
+
+↓
+
+SELF-CORRECTION
+
+### Current Limitation
+
+The system currently decides whether another attempt should be made.
+
+It does not yet automatically generate an improved SQL query using a Large Language Model.
+
+### Next Milestone
+
+Integrate an LLM-based planner and implement automatic retry using revised SQL generated from the planning stage.
