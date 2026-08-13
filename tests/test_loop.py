@@ -1,53 +1,80 @@
 from agent.loop import run_agent
 
 
-def test_successful_query():
-    result = run_agent(
-        "Show all employees."
-    )
+def fake_planner(
+    perception,
+    previous_observation=None,
+    previous_sql=None
+):
 
-    assert result["status"] == "success"
-    assert result["observation"]["status"] == "success"
+    if previous_observation is None:
 
+        return {
+            "sql_query":
+                "SELECT * FROM employeez;",
+            "plan_summary":
+                "Deliberately invalid SQL "
+                "for failure-recovery testing."
+        }
 
-def test_zero_result_query():
-    result = run_agent(
-        "Show employees from Space Research."
-    )
+    return {
+        "sql_query":
+            "SELECT * FROM employees;",
+        "plan_summary":
+            "Correct the failed query using "
+            "the observed database error."
+    }
 
-    assert result["status"] == "no_results"
-    assert result["observation"]["status"] == "zero_rows"
 
 def test_sql_error_recovery():
+
     result = run_agent(
         "Show all employees.",
-        initial_query="SELECT * FROM employeez;"
+        planner=fake_planner
     )
 
-    assert result["status"] == "success"
-    assert result["observation"]["status"] == "success"
+    assert (
+        result["status"]
+        == "success"
+    )
 
-try:
-    test_sql_error_recovery()
-    print("SQL error recovery: PASS")
-except Exception as error:
-    print("SQL error recovery: FAIL")
-    print("Error:", error)
+    assert (
+        result["observation"]["status"]
+        == "success"
+    )
 
-print("\n===== AGENT LOOP TESTS =====")
+    assert (
+        result["iterations"]
+        == 2
+    )
 
-try:
-    test_successful_query()
-    print("Successful agent loop: PASS")
-except Exception as error:
-    print("Successful agent loop: FAIL")
-    print("Error:", error)
 
-try:
-    test_zero_result_query()
-    print("Zero-result handling: PASS")
-except Exception as error:
-    print("Zero-result handling: FAIL")
-    print("Error:", error)
+def test_successful_agent_loop():
 
-print("\nAgent loop tests completed.")
+    def successful_planner(
+        perception,
+        previous_observation=None,
+        previous_sql=None
+    ):
+
+        return {
+            "sql_query":
+                "SELECT * FROM employees;",
+            "plan_summary":
+                "Return all employee records."
+        }
+
+    result = run_agent(
+        "Show all employees.",
+        planner=successful_planner
+    )
+
+    assert (
+        result["status"]
+        == "success"
+    )
+
+    assert (
+        result["iterations"]
+        == 1
+    )

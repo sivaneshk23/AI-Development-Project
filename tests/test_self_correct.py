@@ -1,69 +1,47 @@
 from agent.self_correct import self_correct
 
 
-def test_success():
+def test_self_correction_calls_planner(
+    monkeypatch
+):
 
-    result = self_correct(
-        "SELECT * FROM employees "
-        "WHERE department='IT';"
+    expected = {
+        "sql_query":
+            "SELECT * FROM employees;",
+        "plan_summary":
+            "Corrected query."
+    }
+
+    monkeypatch.setattr(
+        "agent.self_correct.create_plan",
+        lambda perception,
+        previous_observation=None,
+        previous_sql=None:
+            expected
     )
 
-    assert result["status"] == "success"
-    assert result["retry"] is False
+    perception = {
+        "user_question":
+            "Show all employees.",
+        "database_schema": {}
+    }
 
-
-def test_sql_error():
-
-    result = self_correct(
-        "SELECT * FROM employeez;"
-    )
-
-    assert result["status"] == "error"
-    assert result["retry"] is True
-
-
-def test_zero_rows():
+    observation = {
+        "status": "error",
+        "message":
+            "no such table: employeez",
+        "should_retry": True,
+        "has_rows": False
+    }
 
     result = self_correct(
-        "SELECT * FROM employees "
-        "WHERE department='Space Research';"
+        perception,
+        "SELECT * FROM employeez;",
+        observation
     )
 
-    assert result["status"] == "zero_rows"
-    assert result["retry"] is True
-
-
-if __name__ == "__main__":
-
-    tests = [
-        test_success,
-        test_sql_error,
-        test_zero_rows
-    ]
-
-    passed = 0
-
-    print("\n===== SELF CORRECTION TESTS =====\n")
-
-    for test in tests:
-
-        try:
-            test()
-
-            print(
-                f"{test.__name__}: PASS"
-            )
-
-            passed += 1
-
-        except Exception as error:
-
-            print(
-                f"{test.__name__}: FAIL"
-            )
-
-            print(error)
-
-    print(
-        f"\nResult: {passed}/{len(tests)} tests passed."
+    assert (
+        result
+        ==
+        expected
     )
