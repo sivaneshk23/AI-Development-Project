@@ -1,75 +1,42 @@
 # AI Development Project
 
-## Cycle 1 — Agent Loop
+## Overview
 
-### Selected Use Case
+This repository contains the six-cycle Agentic AI Development Project
+implemented as part of the Semester 5 AI Development Preparation program.
 
-**UC3 — Self-Correcting SQL Agent**
+The project follows the official cyclic submission structure.
 
-This project implements a single-agent loop that converts a natural-language
-database request into a read-only SQL query, executes the query against a
-local SQLite database, observes the result, and retries with a corrected
-query when execution fails or returns zero rows.
+## Cycle Structure
 
-The agent follows:
+| Cycle | Topic | Use Case | Status |
+|---|---|---|---|
+| Cycle 1 | Agent Loop | UC3 - Self-Correcting SQL Agent | Completed |
+| Cycle 2 | MCP Server | UC4 - E-Commerce Order MCP Server | Upcoming |
+| Cycle 3 | Multi-agent Orchestration | UC5 - Feature-Delivery Crew | Planned |
+| Cycle 4 | A2A Protocol | UC4 - IT Helpdesk Federation | Planned |
+| Cycle 5 | Agent Harness | UC3 - Sandboxed Code-Execution Harness | Optional |
+| Cycle 6 | Human in the Loop | UC4 - Destructive Database Operation Sign-off | Optional |
 
-Perceive → Plan → Act → Observe
-
-until a valid non-empty result is obtained or the maximum iteration limit
-is reached.
-
----
-
-## Problem Statement
-
-Users may know what information they need from a database without knowing
-the SQL syntax required to retrieve it.
-
-The Self-Correcting SQL Agent accepts a natural-language request and uses
-a local Large Language Model through Ollama to generate a SQL query.
-
-If the generated SQL fails or produces no rows, the result is passed back
-into the next planning iteration so the model can correct the query.
-
----
-
-## Architecture
+## Repository Structure
 
 ```text
-User
-  |
-  v
-Agent Loop
-  |
-  +--> PERCEIVE
-  |       |
-  |       +--> User Request
-  |       +--> Database Schema
-  |
-  +--> PLAN
-  |       |
-  |       +--> Ollama
-  |              |
-  |              +--> SQL Query
-  |              +--> Plan Summary
-  |
-  +--> ACT
-  |       |
-  |       +--> Schema Inspection Tool
-  |       |
-  |       +--> SQL Execution Tool
-  |                    |
-  |                    v
-  |               SQLite Database
-  |
-  +--> OBSERVE
-          |
-          +--> Success + Non-empty Result
-          |          |
-          |          v
-          |         STOP
-          |
-          +--> Error / Zero Rows
-                     |
-                     v
-                 Next Plan
+AI-Development-Project/
+│
+├── agent-loop/
+│   └── Cycle 1 implementation
+│
+├── mcp-server/
+│   └── Cycle 2 implementation
+│
+├── multi-agent/
+│   └── Cycle 3 implementation
+│
+├── a2a-mcp/
+│   └── Cycle 4 implementation
+│
+├── README.md
+├── LICENSE
+├── .gitignore
+├── .env.example
+└── requirements.txt
