@@ -16,6 +16,7 @@ venv/
 
 # Logs
 logs/*.json
+logs/*.jsonl
 logs/*.txt
 
 # Database

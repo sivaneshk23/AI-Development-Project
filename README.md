@@ -1,82 +1,75 @@
 # AI Development Project
 
-## Cycle 1 - Agent Loop
+## Cycle 1 — Agent Loop
 
-### Self-Correcting SQL Agent
+### Selected Use Case
 
-This repository contains my Semester 5 AI Development assignments based on the Agentic AI Skill-Building Preparation.
+**UC3 — Self-Correcting SQL Agent**
 
-The current compulsory cycle focuses on implementing a single-agent loop using the Perceive → Plan → Act → Observe pattern.
+This project implements a single-agent loop that converts a natural-language
+database request into a read-only SQL query, executes the query against a
+local SQLite database, observes the result, and retries with a corrected
+query when execution fails or returns zero rows.
 
-## Selected Use Case
+The agent follows:
 
-UC3 - Self-Correcting SQL Agent
+Perceive → Plan → Act → Observe
 
-The agent accepts a natural-language database request and uses a real LLM to generate an SQL query.
+until a valid non-empty result is obtained or the maximum iteration limit
+is reached.
 
-The generated query is executed against a sample database.
+---
 
-If the query fails or returns no useful result, the agent observes the failure, sends the observation back to the LLM and attempts to generate a corrected query.
+## Problem Statement
 
-The process continues until a valid non-empty result is obtained or the maximum iteration count is reached.
+Users may know what information they need from a database without knowing
+the SQL syntax required to retrieve it.
 
-## Agent Loop
+The Self-Correcting SQL Agent accepts a natural-language request and uses
+a local Large Language Model through Ollama to generate a SQL query.
+
+If the generated SQL fails or produces no rows, the result is passed back
+into the next planning iteration so the model can correct the query.
+
+---
+
+## Architecture
 
 ```text
-Perceive
-   ↓
-Plan
-   ↓
-Act
-   ↓
-Observe
-   ↓
-Success?
- ↙       ↘
-No       Yes
-↓         ↓
-Repeat   Stop
-```
-
-## Mandatory Requirements
-
-- Explicit Perceive → Plan → Act → Observe stages
-- Real LLM in the Plan stage
-- Minimum two callable tools
-- Maximum iteration termination
-- Explicit success-condition termination
-- Iteration logging
-- Tool-failure recovery
-
-## Planned Tools
-
-1. Database Schema Inspection Tool
-2. SQL Execution Tool
-
-## Technology
-
-- Python
-- SQLite
-- Ollama
-- Git
-- GitHub
-
-Exact framework, SDK and model versions will be documented once the implementation environment is finalized.
-
-## Current Status
-
-Cycle 1 - Planning and Initial Design
-
-## Deadline
-
-12 August 2026
-
-## Final Deliverables
-
-- Working runnable Agent Loop
-- Clean incremental GitHub history
-- README with setup and run instructions
-- Architecture diagram
-- Sample input and output
-- 3-5 minute live demo video
-- Live viva demonstration
+User
+  |
+  v
+Agent Loop
+  |
+  +--> PERCEIVE
+  |       |
+  |       +--> User Request
+  |       +--> Database Schema
+  |
+  +--> PLAN
+  |       |
+  |       +--> Ollama
+  |              |
+  |              +--> SQL Query
+  |              +--> Plan Summary
+  |
+  +--> ACT
+  |       |
+  |       +--> Schema Inspection Tool
+  |       |
+  |       +--> SQL Execution Tool
+  |                    |
+  |                    v
+  |               SQLite Database
+  |
+  +--> OBSERVE
+          |
+          +--> Success + Non-empty Result
+          |          |
+          |          v
+          |         STOP
+          |
+          +--> Error / Zero Rows
+                     |
+                     v
+                 Next Plan
