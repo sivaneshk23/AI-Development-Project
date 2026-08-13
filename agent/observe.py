@@ -1,70 +1,54 @@
-from agent.act import act
+def observe(
+    action: dict
+) -> dict:
 
+    schema_tool = (
+        action["tools_called"][0]
+    )
 
-def observe(action):
-    """
-    Analyze the result produced by the ACT stage.
+    if not schema_tool["success"]:
 
-    Possible observation states:
-    - success
-    - zero_rows
-    - error
-    """
+        return {
+            "status": "error",
+            "message": schema_tool["error"],
+            "should_retry": True,
+            "has_rows": False
+        }
 
-    result = action["result"]
+    result = action[
+        "result"
+    ]
 
     if not result["success"]:
+
         return {
             "status": "error",
             "message": result["error"],
-            "should_retry": True
+            "should_retry": True,
+            "has_rows": False
         }
 
     if (
         result["columns"]
-        and len(result["rows"]) == 0
+        and not result["rows"]
     ):
+
         return {
             "status": "zero_rows",
-            "message": "Query executed successfully but returned no rows.",
-            "should_retry": True
+            "message": (
+                "Query executed successfully "
+                "but returned no rows."
+            ),
+            "should_retry": True,
+            "has_rows": False
         }
 
     return {
         "status": "success",
-        "message": "Query executed successfully.",
-        "should_retry": False
+        "message": (
+            "Query executed successfully "
+            "with a non-empty result."
+        ),
+        "should_retry": False,
+        "has_rows": True
     }
-
-
-def display_observation(observation):
-    print("\n===== OBSERVE =====")
-
-    print(
-        "Status:",
-        observation["status"]
-    )
-
-    print(
-        "Message:",
-        observation["message"]
-    )
-
-    print(
-        "Should Retry:",
-        observation["should_retry"]
-    )
-
-
-if __name__ == "__main__":
-    query = input(
-        "Enter SQL query: "
-    )
-
-    action = act(query)
-
-    observation = observe(action)
-
-    display_observation(
-        observation
-    )

@@ -1,65 +1,69 @@
-from tools.sql_tool import execute_sql
+from tools.schema_tool import (
+    get_database_schema
+)
+
+from tools.sql_tool import (
+    execute_sql
+)
 
 
-def act(sql_query):
-    """
-    Execute a SQL query using the SQL execution tool.
+def act(
+    sql_query: str
+) -> dict:
 
-    The ACT stage does not generate SQL.
-    It receives SQL produced by the planning/reasoning
-    stage and delegates execution to the SQL tool.
-    """
+    try:
 
-    result = execute_sql(sql_query)
+        schema = get_database_schema()
 
-    action = {
-        "tool": "execute_sql",
-        "sql_query": sql_query,
-        "result": result
-    }
+        schema_tool = {
+            "tool": "inspect_database_schema",
+            "success": True,
+            "result": schema,
+            "error": None
+        }
 
-    return action
+    except Exception as error:
 
+        schema_tool = {
+            "tool": "inspect_database_schema",
+            "success": False,
+            "result": {},
+            "error": str(error)
+        }
 
-def display_action(action):
-    print("\n===== ACT =====")
+    if not schema_tool["success"]:
 
-    print("\nTool:")
-    print(action["tool"])
+        return {
+            "tools_called": [
+                schema_tool
+            ],
+            "tool": "inspect_database_schema",
+            "sql_query": sql_query,
+            "result": {
+                "success": False,
+                "columns": [],
+                "rows": [],
+                "error": schema_tool["error"]
+            }
+        }
 
-    print("\nSQL Query:")
-    print(action["sql_query"])
-
-    result = action["result"]
-
-    if result["success"]:
-        print("\nExecution Status: SUCCESS")
-
-        if result["columns"]:
-            print(
-                "Columns:",
-                result["columns"]
-            )
-
-        if result["rows"]:
-            print("\nResults:")
-
-            for row in result["rows"]:
-                print(row)
-
-        elif result["columns"]:
-            print("\nNo records found.")
-
-    else:
-        print("\nExecution Status: FAILED")
-        print("Error:", result["error"])
-
-
-if __name__ == "__main__":
-    query = input(
-        "Enter SQL query for ACT stage: "
+    sql_result = execute_sql(
+        sql_query
     )
 
-    action_result = act(query)
+    sql_tool = {
+        "tool": "execute_sql",
+        "success": sql_result["success"],
+        "result": sql_result,
+        "error": sql_result["error"]
+    }
 
-    display_action(action_result)
+    return {
+        "tools_called": [
+            schema_tool,
+            sql_tool
+        ],
+        "tool": "execute_sql",
+        "sql_query": sql_query,
+        "result": sql_result
+    }
