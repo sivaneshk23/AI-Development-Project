@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Any
 
 from mcp.server import MCPServer
@@ -7,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 try:
-
     from mcp_server.database import (
         create_return,
         get_dataset_summary,
@@ -20,7 +17,6 @@ try:
     )
 
 except ModuleNotFoundError:
-
     from database import (
         create_return,
         get_dataset_summary,
@@ -33,17 +29,12 @@ except ModuleNotFoundError:
     )
 
 
-mcp = MCPServer(
-    name="ecommerce-order-server"
-)
+# ============================================================
+# Structured output models
+# ============================================================
 
 
 class OrderData(BaseModel):
-
-    model_config = ConfigDict(
-        extra="forbid"
-    )
-
     order_id: str
     customer_name: str
     product_id: str
@@ -53,23 +44,7 @@ class OrderData(BaseModel):
     tracking_number: str
 
 
-class TrackOrderOutput(BaseModel):
-
-    model_config = ConfigDict(
-        extra="forbid"
-    )
-
-    success: bool
-    order: OrderData | None = None
-    error: str | None = None
-
-
 class ProductData(BaseModel):
-
-    model_config = ConfigDict(
-        extra="forbid"
-    )
-
     product_id: str
     name: str
     category: str
@@ -77,42 +52,66 @@ class ProductData(BaseModel):
     stock_quantity: int
 
 
-class CheckStockOutput(BaseModel):
-
-    model_config = ConfigDict(
-        extra="forbid"
-    )
-
-    success: bool
-    product: ProductData | None = None
-    error: str | None = None
-
-
 class ReturnData(BaseModel):
-
-    model_config = ConfigDict(
-        extra="forbid"
-    )
-
     return_id: int
     order_id: str
     reason: str
     status: str
 
 
-class InitiateReturnOutput(BaseModel):
+class TrackOrderOutput(BaseModel):
+    success: bool
+    order: OrderData | None = None
+    error: str | None = None
 
+
+class CheckStockOutput(BaseModel):
+    success: bool
+    product: ProductData | None = None
+    error: str | None = None
+
+
+class InitiateReturnOutput(BaseModel):
     model_config = ConfigDict(
-        extra="forbid",
         populate_by_name=True
     )
 
     success: bool
+
     return_data: ReturnData | None = Field(
         default=None,
-        alias="return"
+        alias="return",
     )
+
     error: str | None = None
+
+
+# ============================================================
+# Explicit model rebuild
+# ============================================================
+
+OrderData.model_rebuild()
+ProductData.model_rebuild()
+ReturnData.model_rebuild()
+
+TrackOrderOutput.model_rebuild()
+CheckStockOutput.model_rebuild()
+InitiateReturnOutput.model_rebuild()
+
+
+# ============================================================
+# MCP server
+# ============================================================
+
+
+mcp = MCPServer(
+    name="ecommerce-order-server"
+)
+
+
+# ============================================================
+# Tool 1: Track Order
+# ============================================================
 
 
 @mcp.tool()
@@ -125,22 +124,29 @@ def track_order(
     """
 
     try:
-
         order = get_order(
             order_id
         )
 
         if order is None:
-
             raise ValueError(
                 f"Order not found: {order_id}"
             )
 
+        order_data = OrderData(
+            order_id=order["order_id"],
+            customer_name=order["customer_name"],
+            product_id=order["product_id"],
+            product_name=order["product_name"],
+            quantity=order["quantity"],
+            order_status=order["order_status"],
+            tracking_number=order["tracking_number"],
+        )
+
         result = TrackOrderOutput(
             success=True,
-            order=OrderData(
-                **order
-            ),
+            order=order_data,
+            error=None,
         )
 
         log_invocation(
@@ -154,7 +160,6 @@ def track_order(
         return result
 
     except Exception as error:
-
         log_invocation(
             tool_name="track_order",
             arguments={
@@ -166,8 +171,14 @@ def track_order(
 
         return TrackOrderOutput(
             success=False,
+            order=None,
             error=str(error),
         )
+
+
+# ============================================================
+# Tool 2: Check Stock
+# ============================================================
 
 
 @mcp.tool()
@@ -180,22 +191,27 @@ def check_stock(
     """
 
     try:
-
         product = get_product(
             product_id
         )
 
         if product is None:
-
             raise ValueError(
                 f"Product not found: {product_id}"
             )
 
+        product_data = ProductData(
+            product_id=product["product_id"],
+            name=product["name"],
+            category=product["category"],
+            price=product["price"],
+            stock_quantity=product["stock_quantity"],
+        )
+
         result = CheckStockOutput(
             success=True,
-            product=ProductData(
-                **product
-            ),
+            product=product_data,
+            error=None,
         )
 
         log_invocation(
@@ -209,7 +225,6 @@ def check_stock(
         return result
 
     except Exception as error:
-
         log_invocation(
             tool_name="check_stock",
             arguments={
@@ -221,8 +236,14 @@ def check_stock(
 
         return CheckStockOutput(
             success=False,
+            product=None,
             error=str(error),
         )
+
+
+# ============================================================
+# Tool 3: Initiate Return
+# ============================================================
 
 
 @mcp.tool()
@@ -236,26 +257,30 @@ def initiate_return(
     """
 
     try:
-
         cleaned_reason = reason.strip()
 
         if not cleaned_reason:
-
             raise ValueError(
                 "Return reason cannot be empty."
             )
 
-        result = create_return(
+        return_record = create_return(
             order_id=order_id,
             reason=cleaned_reason,
         )
 
-        response = InitiateReturnOutput(
-    success=True,
-    return_data=ReturnData(
-        **result
-    ),
-)
+        return_data = ReturnData(
+            return_id=return_record["return_id"],
+            order_id=return_record["order_id"],
+            reason=return_record["reason"],
+            status=return_record["status"],
+        )
+
+        result = InitiateReturnOutput(
+            success=True,
+            return_data=return_data,
+            error=None,
+        )
 
         log_invocation(
             tool_name="initiate_return",
@@ -266,10 +291,9 @@ def initiate_return(
             success=True,
         )
 
-        return response
+        return result
 
     except Exception as error:
-
         log_invocation(
             tool_name="initiate_return",
             arguments={
@@ -282,8 +306,14 @@ def initiate_return(
 
         return InitiateReturnOutput(
             success=False,
+            return_data=None,
             error=str(error),
         )
+
+
+# ============================================================
+# MCP Resource
+# ============================================================
 
 
 @mcp.resource(
@@ -306,6 +336,10 @@ def ecommerce_summary() -> str:
     )
 
 
-if __name__ == "__main__":
+# ============================================================
+# Server entry point
+# ============================================================
 
+
+if __name__ == "__main__":
     mcp.run()
