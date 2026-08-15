@@ -27,3 +27,11 @@ logs/*.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime logs
+agent-loop/logs/*.jsonl
+mcp-server/logs/*.jsonl
+
+# Python cache
+**/__pycache__/
+*.py[cod]
