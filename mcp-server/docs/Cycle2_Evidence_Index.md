@@ -6,8 +6,8 @@
 **Use Case:** UC4 — E-Commerce Order MCP Server  
 **Cycle:** 2  
 **Cycle Days:** 16–30  
-**Current Day:** Day 19  
-**Date:** 17 August 2026  
+**Current Day:** Day 20  
+**Date:** 18 August 2026  
 **Official Deadline:** 27 August 2026  
 **Status:** In Progress
 
@@ -17,9 +17,9 @@
 
 ### Requirement
 
-Build the MCP server using the official MCP SDK.
+Build the server using the official MCP SDK.
 
 ### Implementation
 
 ```text
-mcp_server/server.py
+mcp-server/mcp_server/server.py
